@@ -45,7 +45,7 @@ function Shape({
 }
 
 function Background() {
-  const bg = useLoader(TextureLoader, "../src/assets/champloo.jpg");
+  const bg = useLoader(TextureLoader, "champloo.jpg");
 
   return (
     <mesh position={[0, 0, -1]}>
