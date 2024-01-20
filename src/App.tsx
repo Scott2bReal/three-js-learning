@@ -1,35 +1,81 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useRef } from "react";
+import "./App.css";
+import {
+  Canvas,
+  MeshPhysicalMaterialProps,
+  useFrame,
+  useLoader,
+  useThree,
+} from "@react-three/fiber";
+import { TextureLoader } from "three";
+import { OrbitControls } from "@react-three/drei";
 
-function App() {
-  const [count, setCount] = useState(0)
+function Shape({
+  position = [0, 0, 0],
+  color = "lime",
+}: {
+  position?: [number, number, number];
+  color?: string;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const { pointer } = useThree();
+
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x = pointer.y * 2;
+      meshRef.current.rotation.y = pointer.x * 2;
+    }
+  });
+
+  const materialParams: MeshPhysicalMaterialProps = {
+    color,
+    transmission: 1,
+    roughness: 0.05,
+    metalness: 0,
+    thickness: 0.2,
+    iridescence: 1,
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <mesh ref={meshRef} position={position}>
+      <dodecahedronGeometry />
+      <meshPhysicalMaterial {...materialParams} />
+    </mesh>
+  );
 }
 
-export default App
+function Background() {
+  const bg = useLoader(TextureLoader, "../src/assets/champloo.jpg");
+
+  return (
+    <mesh position={[0, 0, -1]}>
+      <planeGeometry args={[16, 9]} />
+      <meshBasicMaterial map={bg} />
+    </mesh>
+  );
+}
+
+function Light({
+  position = [0, 0, 5],
+}: {
+  position?: [number, number, number];
+}) {
+  const lightRef = useRef<THREE.PointLight>(null!);
+  return <pointLight position={position} intensity={5} ref={lightRef} />;
+}
+
+function App() {
+  return (
+    <>
+      <Canvas shadows={true} gl={{ antialias: true }}>
+        <ambientLight intensity={0.5} />
+        <Background />
+        <Light />
+        <Shape position={[0, 0, 1]} />
+        <OrbitControls />
+      </Canvas>
+    </>
+  );
+}
+
+export default App;
